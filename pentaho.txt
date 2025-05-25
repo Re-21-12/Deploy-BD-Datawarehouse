@@ -1,0 +1,7 @@
+Esta es una interfaz gráfica de Spoon (Pentaho Data Integration) accesible desde el navegador con VNC.
+
+Ve a: http://localhost:58080
+
+Usuario: admin
+
+Contraseña: admin
