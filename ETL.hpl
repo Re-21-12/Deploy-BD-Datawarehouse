@@ -3,7 +3,7 @@
   <info>
     <name>fix</name>
     <name_sync_with_filename>Y</name_sync_with_filename>
-    <description>Pipeline ETL completo para Data Warehouse de Clima</description>
+    <description>ETL completo para cargar datos de clima al data warehouse</description>
     <extended_description/>
     <pipeline_version/>
     <pipeline_type>Normal</pipeline_type>
@@ -13,15 +13,15 @@
     <transform_performance_capturing_delay>1000</transform_performance_capturing_delay>
     <transform_performance_capturing_size_limit>100</transform_performance_capturing_size_limit>
     <created_user>-</created_user>
-    <created_date>2025/05/27 10:00:00.000</created_date>
+    <created_date>2025/05/28 00:00:00.000</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2025/05/27 10:00:00.000</modified_date>
+    <modified_date>2025/05/28 00:00:00.000</modified_date>
   </info>
   <notepads>
   </notepads>
   <order>
     <hop>
-      <from>Table input</from>
+      <from>Staging Input</from>
       <to>Data validation</to>
       <enabled>Y</enabled>
     </hop>
@@ -60,12 +60,33 @@
       <to>WeatherFacts Output</to>
       <enabled>Y</enabled>
     </hop>
+    <hop>
+      <from>DimDateTime Input</from>
+      <to>DateTime Lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>DimCondition Input</from>
+      <to>Condition Lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>DimStation Input</from>
+      <to>Station Lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>DimLocation Input</from>
+      <to>Location Lookup</to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
-  
+
+  <!-- Carga de datos del staging -->
   <transform>
-    <name>Table input</name>
+    <name>Staging Input</name>
     <type>TableInput</type>
-    <description>Lee datos del staging</description>
+    <description>Obtiene datos del staging</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -77,47 +98,52 @@
     <execute_each_row>N</execute_each_row>
     <limit>0</limit>
     <sql>SELECT 
-      datetime,
-      tempmax,
-      tempmin,
-      temp,
-      feelslikemax,
-      feelslikemin,
-      feelslike,
-      dew,
-      humidity,
-      precipt,
-      precipprob,
-      precipcover,
-      preciptype,
-      snow,
-      snowdepth,
-      windgust,
-      windspeed,
-      winddir,
-      sealevelpressure,
-      cloudcover,
-      visibility,
-      solarradiation,
-      solarenergy,
-      uvindex,
-      severerisk,
-      moonphase,
-      conditions,
-      description,
-      icon,
-      stations,
-      departamento
-    FROM staging.clima
-    WHERE datetime IS NOT NULL;</sql>
+    name,
+    datetime,
+    tempmax,
+    tempmin,
+    temp,
+    feelslikemax,
+    feelslikemin,
+    feelslike,
+    dew,
+    humidity,
+    precipt,
+    precipprob,
+    precipcover,
+    preciptype,
+    snow,
+    snowdepth,
+    windgust,
+    windspeed,
+    winddir,
+    sealevelpressure,
+    cloudcover,
+    visibility,
+    solarradiation,
+    solarenergy,
+    uvindex,
+    severerisk,
+    sunrise,
+    sunset,
+    moonphase,
+    conditions,
+    description,
+    icon,
+    stations,
+    departamento
+FROM staging.clima
+WHERE datetime IS NOT NULL
+ORDER BY datetime, stations;</sql>
     <variables_active>N</variables_active>
     <attributes/>
     <GUI>
-      <xloc>96</xloc>
+      <xloc>80</xloc>
       <yloc>144</yloc>
     </GUI>
   </transform>
 
+  <!-- Validación básica de datos -->
   <transform>
     <name>Data validation</name>
     <type>FilterRows</type>
@@ -134,7 +160,7 @@
         <conditions>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>IS NOT NULL</function>
             <leftvalue>datetime</leftvalue>
             <negated>N</negated>
@@ -142,7 +168,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>IS NOT NULL</function>
             <leftvalue>conditions</leftvalue>
             <negated>N</negated>
@@ -150,7 +176,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>IS NOT NULL</function>
             <leftvalue>stations</leftvalue>
             <negated>N</negated>
@@ -158,7 +184,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>IS NOT NULL</function>
             <leftvalue>departamento</leftvalue>
             <negated>N</negated>
@@ -179,6 +205,100 @@
     </GUI>
   </transform>
 
+  <!-- Cargar dimensiones -->
+  <transform>
+    <name>DimDateTime Input</name>
+    <type>TableInput</type>
+    <description>Carga DimDateTime</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>postgress-datawarehouse</connection>
+    <execute_each_row>N</execute_each_row>
+    <limit>0</limit>
+    <sql>SELECT id, date, datetime FROM dw."DimDateTime";</sql>
+    <variables_active>N</variables_active>
+    <attributes/>
+    <GUI>
+      <xloc>320</xloc>
+      <yloc>80</yloc>
+    </GUI>
+  </transform>
+
+  <transform>
+    <name>DimCondition Input</name>
+    <type>TableInput</type>
+    <description>Carga DimCondition</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>postgress-datawarehouse</connection>
+    <execute_each_row>N</execute_each_row>
+    <limit>0</limit>
+    <sql>SELECT id, condition FROM dw."DimCondition";</sql>
+    <variables_active>N</variables_active>
+    <attributes/>
+    <GUI>
+      <xloc>440</xloc>
+      <yloc>80</yloc>
+    </GUI>
+  </transform>
+
+  <transform>
+    <name>DimStation Input</name>
+    <type>TableInput</type>
+    <description>Carga DimStation</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>postgress-datawarehouse</connection>
+    <execute_each_row>N</execute_each_row>
+    <limit>0</limit>
+    <sql>SELECT id, code FROM dw."DimStation";</sql>
+    <variables_active>N</variables_active>
+    <attributes/>
+    <GUI>
+      <xloc>560</xloc>
+      <yloc>80</yloc>
+    </GUI>
+  </transform>
+
+  <transform>
+    <name>DimLocation Input</name>
+    <type>TableInput</type>
+    <description>Carga DimLocation</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>postgress-datawarehouse</connection>
+    <execute_each_row>N</execute_each_row>
+    <limit>0</limit>
+    <sql>SELECT id, name FROM dw."DimLocation";</sql>
+    <variables_active>N</variables_active>
+    <attributes/>
+    <GUI>
+      <xloc>680</xloc>
+      <yloc>80</yloc>
+    </GUI>
+  </transform>
+
+  <!-- Lookups corregidos -->
   <transform>
     <name>DateTime Lookup</name>
     <type>StreamLookup</type>
@@ -190,20 +310,15 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>postgress-datawarehouse</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
+    <from>DimDateTime Input</from>
+    <input_sorted>N</input_sorted>
+    <preserve_memory>N</preserve_memory>
+    <sorted_list>N</sorted_list>
+    <integer_pair>N</integer_pair>
     <lookup>
-      <schema>dw</schema>
-      <table>"DimDateTime"</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>datetime</name>
-        <field>datetime</field>
-        <condition>=</condition>
+        <field>date</field>
       </key>
       <value>
         <name>id</name>
@@ -222,7 +337,7 @@
   <transform>
     <name>Condition Lookup</name>
     <type>StreamLookup</type>
-    <description>Busca condition_id en DimCondition</description>
+    <description>Busca condition_id</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -230,20 +345,15 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>postgress-datawarehouse</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
+    <from>DimCondition Input</from>
+    <input_sorted>N</input_sorted>
+    <preserve_memory>N</preserve_memory>
+    <sorted_list>N</sorted_list>
+    <integer_pair>N</integer_pair>
     <lookup>
-      <schema>dw</schema>
-      <table>"DimCondition"</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>conditions</name>
         <field>condition</field>
-        <condition>=</condition>
       </key>
       <value>
         <name>id</name>
@@ -262,7 +372,7 @@
   <transform>
     <name>Station Lookup</name>
     <type>StreamLookup</type>
-    <description>Busca station_id en DimStation</description>
+    <description>Busca station_id</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -270,20 +380,15 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>postgress-datawarehouse</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
+    <from>DimStation Input</from>
+    <input_sorted>N</input_sorted>
+    <preserve_memory>N</preserve_memory>
+    <sorted_list>N</sorted_list>
+    <integer_pair>N</integer_pair>
     <lookup>
-      <schema>dw</schema>
-      <table>"DimStation"</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>stations</name>
         <field>code</field>
-        <condition>=</condition>
       </key>
       <value>
         <name>id</name>
@@ -302,7 +407,7 @@
   <transform>
     <name>Location Lookup</name>
     <type>StreamLookup</type>
-    <description>Busca location_id en DimLocation</description>
+    <description>Busca location_id</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -310,20 +415,15 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>postgress-datawarehouse</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
+    <from>DimLocation Input</from>
+    <input_sorted>N</input_sorted>
+    <preserve_memory>N</preserve_memory>
+    <sorted_list>N</sorted_list>
+    <integer_pair>N</integer_pair>
     <lookup>
-      <schema>dw</schema>
-      <table>"DimLocation"</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>departamento</name>
         <field>name</field>
-        <condition>=</condition>
       </key>
       <value>
         <name>id</name>
@@ -339,10 +439,11 @@
     </GUI>
   </transform>
 
+  <!-- Selección final de campos -->
   <transform>
     <name>Final Field Selection</name>
     <type>SelectValues</type>
-    <description>Selecciona y renombra campos finales</description>
+    <description>Selecciona campos finales</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -352,167 +453,173 @@
     </partitioning>
     <fields>
       <field>
-        <length>-2</length>
         <name>datetime_id</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>condition_id</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>station_id</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>location_id</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>tempmax</name>
-        <precision>-2</precision>
         <rename>temp_max</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>tempmin</name>
-        <precision>-2</precision>
         <rename>temp_min</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>temp</name>
-        <precision>-2</precision>
         <rename>temp_avg</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>feelslikemax</name>
-        <precision>-2</precision>
         <rename>feelslike_max</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>feelslikemin</name>
-        <precision>-2</precision>
         <rename>feelslike_min</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>feelslike</name>
-        <precision>-2</precision>
         <rename>feelslike_avg</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>dew</name>
-        <precision>-2</precision>
         <rename>dew_point</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>humidity</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>precipt</name>
-        <precision>-2</precision>
         <rename>precip</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>precipprob</name>
-        <precision>-2</precision>
         <rename>precip_prob</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>precipcover</name>
-        <precision>-2</precision>
         <rename>precip_cover</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>snow</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>snowdepth</name>
-        <precision>-2</precision>
         <rename>snow_depth</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>windgust</name>
-        <precision>-2</precision>
         <rename>wind_gust</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>windspeed</name>
-        <precision>-2</precision>
         <rename>wind_speed</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>winddir</name>
-        <precision>-2</precision>
         <rename>wind_dir</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>sealevelpressure</name>
-        <precision>-2</precision>
         <rename>pressure</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>cloudcover</name>
-        <precision>-2</precision>
         <rename>cloud_cover</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>visibility</name>
+        <rename/>
+        <length>-2</length>
         <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>solarradiation</name>
-        <precision>-2</precision>
         <rename>solar_radiation</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>solarenergy</name>
-        <precision>-2</precision>
         <rename>solar_energy</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>uvindex</name>
-        <precision>-2</precision>
         <rename>uv_index</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>severerisk</name>
-        <precision>-2</precision>
         <rename>severe_risk</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
       <field>
-        <length>-2</length>
         <name>moonphase</name>
-        <precision>-2</precision>
         <rename>moon_phase</rename>
+        <length>-2</length>
+        <precision>-2</precision>
       </field>
-      <select_unspecified>N</select_unspecified>
     </fields>
     <attributes/>
     <GUI>
@@ -521,10 +628,11 @@
     </GUI>
   </transform>
 
+  <!-- Filtro final mejorado -->
   <transform>
     <name>Final Filter</name>
     <type>FilterRows</type>
-    <description>Filtro final para datos válidos</description>
+    <description>Filtro final con validación de IDs</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -537,7 +645,7 @@
         <conditions>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>&gt;</function>
             <leftvalue>datetime_id</leftvalue>
             <negated>N</negated>
@@ -554,7 +662,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>&gt;</function>
             <leftvalue>condition_id</leftvalue>
             <negated>N</negated>
@@ -571,7 +679,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>&gt;</function>
             <leftvalue>station_id</leftvalue>
             <negated>N</negated>
@@ -588,7 +696,7 @@
           </condition>
           <condition>
             <conditions>
-            </conditions>
+</conditions>
             <function>&gt;</function>
             <leftvalue>location_id</leftvalue>
             <negated>N</negated>
@@ -627,6 +735,7 @@
     </GUI>
   </transform>
 
+  <!-- Output final corregido -->
   <transform>
     <name>WeatherFacts Output</name>
     <type>TableOutput</type>
@@ -762,7 +871,7 @@
     <return_keys>N</return_keys>
     <schema>dw</schema>
     <specify_fields>Y</specify_fields>
-    <table>WeatherFacts</table>
+    <table>"WeatherFacts"</table>
     <tablename_in_field>N</tablename_in_field>
     <tablename_in_table>Y</tablename_in_table>
     <truncate>N</truncate>
