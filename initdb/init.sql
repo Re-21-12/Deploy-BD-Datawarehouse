@@ -35,7 +35,7 @@ CREATE TABLE staging."clima"(
     "sunrise" DATE NULL,
     "sunset" DATE NULL,
     "moonphase" FLOAT(53) NULL,
-    "coditions" VARCHAR(255) NULL,
+    "conditions" VARCHAR(255) NULL,
     "description" TEXT NULL,
     "icon" VARCHAR(255) NULL,
     "stations" VARCHAR(255) NULL,
