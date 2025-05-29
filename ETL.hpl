@@ -37,11 +37,6 @@
     </hop>
     <hop>
       <from>Condition Lookup</from>
-      <to>Station Lookup</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Station Lookup</from>
       <to>Location Lookup</to>
       <enabled>Y</enabled>
     </hop>
@@ -68,11 +63,6 @@
     <hop>
       <from>DimCondition Input</from>
       <to>Condition Lookup</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>DimStation Input</from>
-      <to>Station Lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
@@ -130,11 +120,10 @@
     conditions,
     description,
     icon,
-    stations,
     departamento
 FROM staging.clima
 WHERE datetime IS NOT NULL
-ORDER BY datetime, stations;</sql>
+ORDER BY datetime;</sql>
     <variables_active>N</variables_active>
     <attributes/>
     <GUI>
@@ -171,14 +160,6 @@ ORDER BY datetime, stations;</sql>
 </conditions>
             <function>IS NOT NULL</function>
             <leftvalue>conditions</leftvalue>
-            <negated>N</negated>
-            <operator>AND</operator>
-          </condition>
-          <condition>
-            <conditions>
-</conditions>
-            <function>IS NOT NULL</function>
-            <leftvalue>stations</leftvalue>
             <negated>N</negated>
             <operator>AND</operator>
           </condition>
@@ -253,29 +234,6 @@ ORDER BY datetime, stations;</sql>
   </transform>
 
   <transform>
-    <name>DimStation Input</name>
-    <type>TableInput</type>
-    <description>Carga DimStation</description>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>postgress-datawarehouse</connection>
-    <execute_each_row>N</execute_each_row>
-    <limit>0</limit>
-    <sql>SELECT id, code FROM dw."DimStation";</sql>
-    <variables_active>N</variables_active>
-    <attributes/>
-    <GUI>
-      <xloc>560</xloc>
-      <yloc>80</yloc>
-    </GUI>
-  </transform>
-
-  <transform>
     <name>DimLocation Input</name>
     <type>TableInput</type>
     <description>Carga DimLocation</description>
@@ -293,7 +251,7 @@ ORDER BY datetime, stations;</sql>
     <variables_active>N</variables_active>
     <attributes/>
     <GUI>
-      <xloc>680</xloc>
+      <xloc>560</xloc>
       <yloc>80</yloc>
     </GUI>
   </transform>
@@ -370,41 +328,6 @@ ORDER BY datetime, stations;</sql>
   </transform>
 
   <transform>
-    <name>Station Lookup</name>
-    <type>StreamLookup</type>
-    <description>Busca station_id</description>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <from>DimStation Input</from>
-    <input_sorted>N</input_sorted>
-    <preserve_memory>N</preserve_memory>
-    <sorted_list>N</sorted_list>
-    <integer_pair>N</integer_pair>
-    <lookup>
-      <key>
-        <name>stations</name>
-        <field>code</field>
-      </key>
-      <value>
-        <name>id</name>
-        <rename>station_id</rename>
-        <default>-1</default>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <GUI>
-      <xloc>560</xloc>
-      <yloc>144</yloc>
-    </GUI>
-  </transform>
-
-  <transform>
     <name>Location Lookup</name>
     <type>StreamLookup</type>
     <description>Busca location_id</description>
@@ -434,7 +357,7 @@ ORDER BY datetime, stations;</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>680</xloc>
+      <xloc>560</xloc>
       <yloc>144</yloc>
     </GUI>
   </transform>
@@ -460,12 +383,6 @@ ORDER BY datetime, stations;</sql>
       </field>
       <field>
         <name>condition_id</name>
-        <rename/>
-        <length>-2</length>
-        <precision>-2</precision>
-      </field>
-      <field>
-        <name>station_id</name>
         <rename/>
         <length>-2</length>
         <precision>-2</precision>
@@ -623,16 +540,16 @@ ORDER BY datetime, stations;</sql>
     </fields>
     <attributes/>
     <GUI>
-      <xloc>800</xloc>
+      <xloc>680</xloc>
       <yloc>144</yloc>
     </GUI>
   </transform>
 
-  <!-- Filtro final mejorado -->
+  <!-- Filtro final simplificado -->
   <transform>
     <name>Final Filter</name>
     <type>FilterRows</type>
-    <description>Filtro final con validación de IDs</description>
+    <description>Filtro final - solo IDs válidos</description>
     <distribute>Y</distribute>
     <custom_distribution/>
     <copies>1</copies>
@@ -681,23 +598,6 @@ ORDER BY datetime, stations;</sql>
             <conditions>
 </conditions>
             <function>&gt;</function>
-            <leftvalue>station_id</leftvalue>
-            <negated>N</negated>
-            <operator>AND</operator>
-            <value>
-              <isnull>N</isnull>
-              <length>-1</length>
-              <mask>###0;-###0</mask>
-              <name>constant</name>
-              <precision>0</precision>
-              <text>0</text>
-              <type>Integer</type>
-            </value>
-          </condition>
-          <condition>
-            <conditions>
-</conditions>
-            <function>&gt;</function>
             <leftvalue>location_id</leftvalue>
             <negated>N</negated>
             <operator>AND</operator>
@@ -730,7 +630,7 @@ ORDER BY datetime, stations;</sql>
     <send_true_to>WeatherFacts Output</send_true_to>
     <attributes/>
     <GUI>
-      <xloc>920</xloc>
+      <xloc>800</xloc>
       <yloc>144</yloc>
     </GUI>
   </transform>
@@ -757,10 +657,6 @@ ORDER BY datetime, stations;</sql>
       <field>
         <column_name>condition_id</column_name>
         <stream_name>condition_id</stream_name>
-      </field>
-      <field>
-        <column_name>station_id</column_name>
-        <stream_name>station_id</stream_name>
       </field>
       <field>
         <column_name>location_id</column_name>
@@ -878,7 +774,7 @@ ORDER BY datetime, stations;</sql>
     <use_batch>Y</use_batch>
     <attributes/>
     <GUI>
-      <xloc>1040</xloc>
+      <xloc>920</xloc>
       <yloc>144</yloc>
     </GUI>
   </transform>

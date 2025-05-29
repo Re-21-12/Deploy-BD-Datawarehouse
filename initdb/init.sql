@@ -38,7 +38,6 @@ CREATE TABLE staging."clima"(
     "conditions" VARCHAR(255) NULL,
     "description" TEXT NULL,
     "icon" VARCHAR(255) NULL,
-    "stations" VARCHAR(255) NULL,
     "departamento" VARCHAR(255) NULL
 );
 
@@ -62,15 +61,6 @@ CREATE TABLE dw."DimCondition" (
   icon TEXT
 );
 
-CREATE TABLE dw."DimStation" (
-  id SERIAL PRIMARY KEY,
-  code TEXT,
-  name TEXT,
-  lat FLOAT,
-  lon FLOAT,
-  elevation FLOAT
-);
-
 CREATE TABLE dw."DimLocation" (
   id SERIAL PRIMARY KEY,
   name TEXT,
@@ -80,7 +70,6 @@ CREATE TABLE dw."DimLocation" (
 
 CREATE TABLE dw."WeatherFacts" (
   id SERIAL PRIMARY KEY,
-  station_id INT REFERENCES dw."DimStation"(id),
   datetime_id INT REFERENCES dw."DimDateTime"(id),
   location_id INT REFERENCES dw."DimLocation"(id),
   temp_max FLOAT,
