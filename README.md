@@ -4,4 +4,5 @@ docker-compose up --build
 
 ## ER de Staging 
 
-![Untitled](https://github.com/user-attachments/assets/7d7cc87d-dd7c-4706-b231-0459c90f117a)
+
+![Untitled (1)](https://github.com/user-attachments/assets/be1ef3d7-d26e-4b8e-a502-50328d547ad5)
